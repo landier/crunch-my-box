@@ -12,19 +12,11 @@ class CouchDBDao(object):
         except Exception:
             self.db = server[self.config.DB['Name']]
 
-    def save(self, uid, obj):
-        json = obj.__dict__
-        json['uid'] = uid
+    def save(self, obj):
+        doc = self.db.get(obj['_id'])
 
-        json['headers'] = json['_headers']
-        del json['_headers']
-        json['payload'] = json['_payload']
-        del json['_payload']
-        json['charset'] = json['_charset']
-        del json['_charset']
-        json['default_type'] = json['_default_type']
-        del json['_default_type']
-        json['unixfrom'] = json['_unixfrom']
-        del json['_unixfrom']
+        if doc is not None:
+            obj['_rev'] = doc['_rev']
 
-        self.db.save(json)
+        self.db.save(obj)
+
