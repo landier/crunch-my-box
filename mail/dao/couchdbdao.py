@@ -1,3 +1,4 @@
+from json import dumps
 from couchdb.client import Server
 
 class CouchDBDao(object):
@@ -18,5 +19,8 @@ class CouchDBDao(object):
         if doc is not None:
             obj['_rev'] = doc['_rev']
 
-        self.db.save(obj)
-
+        try:
+            self.db.save(obj)
+        except UnicodeDecodeError:
+            res = dumps(obj)
+            open('errors.log', 'a').write(res)

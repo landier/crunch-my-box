@@ -1,6 +1,5 @@
 import imaplib
 import email
-from pprint import pprint
 
 class Grabber(object):
     def __init__(self, config, dao):
@@ -24,6 +23,10 @@ class Grabber(object):
     def retrieveEmails(self, mailBox):
         # Search in mailbox for matching emails.
         result, data = mailBox.uid('search', None, self.config.IMAP['Search'])
+        if result != 'OK':
+            print('Issue while searching: ' + result)
+            exit(1)
+
         uids = data[0].split(' ')
         nbUids = str(len(uids))
         print('Search: ' + self.config.IMAP['Search'] + ' - Results: ' + nbUids)
@@ -33,6 +36,10 @@ class Grabber(object):
         for n in range(0, len(uidSearchResult)):
             uidBatch = ','.join(uidSearchResult[n])
             result, data = mailBox.uid('fetch', uidBatch, self.config.IMAP['DataFormat'])
+            if result != 'OK':
+                print('Issue while fetching: ' + result)
+                exit(1)
+
             print('Fetching: ' + str(len(uidSearchResult[n]) + n*10) + '/' + nbUids)
 
             for i in range(0, len(data), 2):
@@ -77,7 +84,6 @@ class Grabber(object):
 
 
     def chunks(self, l, n):
-        """ Yield successive n-sized chunks from l.
-        """
+        """ Yield successive n-sized chunks from given list. """
         for i in xrange(0, len(l), n):
             yield l[i:i+n]
