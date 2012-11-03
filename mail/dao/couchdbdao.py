@@ -22,5 +22,8 @@ class CouchDBDao(object):
         try:
             self.db.save(obj)
         except UnicodeDecodeError:
-            res = dumps(obj)
-            open('errors.log', 'a').write(res)
+            try:
+                res = dumps(obj)
+                open('errors.log', 'a').write(res)
+            except UnicodeDecodeError:
+                pass

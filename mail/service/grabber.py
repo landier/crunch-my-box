@@ -1,5 +1,8 @@
 import imaplib
 import email
+from datetime import datetime
+
+BATCH_SIZE = 10
 
 class Grabber(object):
     def __init__(self, config, dao):
@@ -29,8 +32,8 @@ class Grabber(object):
 
         uids = data[0].split(' ')
         nbUids = str(len(uids))
-        print('Search: ' + self.config.IMAP['Search'] + ' - Results: ' + nbUids)
-        uidSearchResult = list(self.chunks(uids, 10))
+        print(str(datetime.now()) + ' - Search: ' + self.config.IMAP['Search'] + ' - Results: ' + nbUids)
+        uidSearchResult = list(self.chunks(uids, BATCH_SIZE))
 
         # Fetch found emails by 10 size batch then save them in DB.
         for n in range(0, len(uidSearchResult)):
@@ -40,7 +43,7 @@ class Grabber(object):
                 print('Issue while fetching: ' + result)
                 exit(1)
 
-            print('Fetching: ' + str(len(uidSearchResult[n]) + n*10) + '/' + nbUids)
+            print(str(datetime.now()) + ' - Fetching: ' + str(len(uidSearchResult[n]) + n * BATCH_SIZE) + '/' + nbUids)
 
             for i in range(0, len(data), 2):
                 mail = self.parseEmail(data[i])
