@@ -16,21 +16,28 @@ class Grabber(object):
     def connectEmailAccount(self):
         mailBox = imaplib.IMAP4_SSL(self.config.IMAP['Host'])
         mailBox.login(self.config.IMAP['Username'], self.config.IMAP['Password'])
-        pprint(mailBox.list())
+        #pprint(mailBox.list())
         mailBox.select(self.config.IMAP['Folder'])
         return mailBox
 
 
     def retrieveEmails(self, mailBox):
-
+        # Search in mailbox for matching emails.
         result, data = mailBox.uid('search', None, self.config.IMAP['Search'])
-        uidList = data[0].replace(' ', ',')
-        result, data = mailBox.uid('fetch', uidList, self.config.IMAP['DataFormat'])
+        uids = data[0].split(' ')
+        nbUids = str(len(uids))
+        print('Search: ' + self.config.IMAP['Search'] + ' - Results: ' + nbUids)
+        uidSearchResult = list(self.chunks(uids, 10))
 
-        for i in range(0, len(data), 2):
-            mail = self.parseEmail(data[i])
-            pprint(mail)
-            self.dao.save(mail)
+        # Fetch found emails by 10 size batch then save them in DB.
+        for n in range(0, len(uidSearchResult)):
+            uidBatch = ','.join(uidSearchResult[n])
+            result, data = mailBox.uid('fetch', uidBatch, self.config.IMAP['DataFormat'])
+            print('Fetching: ' + str(len(uidSearchResult[n]) + n*10) + '/' + nbUids)
+
+            for i in range(0, len(data), 2):
+                mail = self.parseEmail(data[i])
+                self.dao.save(mail)
 
 
     def parseEmail(self, input):
@@ -67,3 +74,10 @@ class Grabber(object):
                 dictEmail['payload'][i] = self.convertEmailToDictionary(dictEmail['payload'][i])
 
         return dictEmail
+
+
+    def chunks(self, l, n):
+        """ Yield successive n-sized chunks from l.
+        """
+        for i in xrange(0, len(l), n):
+            yield l[i:i+n]
