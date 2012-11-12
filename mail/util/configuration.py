@@ -2,7 +2,7 @@ import ConfigParser
 from collections import defaultdict
 
 class Configuration(object):
-    def __init__(self, file = '../settings.ini'):
+    def __init__(self, file = '../../settings.ini'):
         error = False
 
         self.config = ConfigParser.ConfigParser()
