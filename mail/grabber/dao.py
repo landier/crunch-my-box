@@ -1,3 +1,4 @@
+from datetime import datetime
 from pymongo import Connection
 from json import dumps
 
@@ -8,7 +9,7 @@ class DAO(object):
     def connectToDabase(self, host, port, name, collection):
         connection = Connection(host, int(port))
         self.collection = connection[name][collection]
-        print('Connected to ' + host + ':' + port + '/' + name + '/' + collection)
+        print(str(datetime.now()) + '- Connected to database: ' + host + ':' + port + '/' + name + '/' + collection)
 
     def save(self, obj):
         doc = self.collection.find_one({ '_id': obj['_id'] })
