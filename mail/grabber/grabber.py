@@ -1,49 +1,54 @@
 import imaplib
-import message
+import email
 from datetime import datetime
-
-BATCH_SIZE = 10
+from message import Message
 
 class Grabber(object):
+    BATCH_SIZE = 10
+    DATA_FORMAT = '(UID X-GM-MSGID X-GM-THRID RFC822)'
+
+
     def __init__(self, config, dao):
         self.config = config
         self.dao = dao
 
 
     def run(self):
-        mailBox = self.connectEmailAccount()
-        self.retrieveEmails(mailBox)
+        mailBox = self.connectToEmailAccount(self.config.IMAP['Host'],
+                                                  self.config.IMAP['Username'],
+                                                  self.config.IMAP['Password'],
+                                                  self.config.IMAP['Folder'])
+        self.retrieveEmails(mailBox, self.config.IMAP['Search'])
 
 
-    def connectEmailAccount(self):
-        mailBox = imaplib.IMAP4_SSL(self.config.IMAP['Host'])
-        mailBox.login(self.config.IMAP['Username'], self.config.IMAP['Password'])
-        #pprint(mailBox.list())
-        mailBox.select(self.config.IMAP['Folder'])
+    def connectToEmailAccount(self, host, username, password, folder):
+        mailBox = imaplib.IMAP4_SSL(host)
+        mailBox.login(username, password)
+        mailBox.select(folder)
         return mailBox
 
 
-    def retrieveEmails(self, mailBox):
+    def retrieveEmails(self, mailBox, search):
         # Search in mailbox for matching emails.
-        result, data = mailBox.uid('search', None, self.config.IMAP['Search'])
+        result, data = mailBox.uid('search', None, search)
         if result != 'OK':
             print('Issue while searching: ' + result)
             exit(1)
 
         uids = data[0].split(' ')
         nbUids = str(len(uids))
-        print(str(datetime.now()) + ' - Search: ' + self.config.IMAP['Search'] + ' - Results: ' + nbUids)
-        uidSearchResult = list(self.chunks(uids, BATCH_SIZE))
+        print(str(datetime.now()) + ' - Search: ' + search + ' - Results: ' + nbUids)
+        uidSearchResult = list(self.chunks(uids, Grabber.BATCH_SIZE))
 
         # Fetch found emails by 10 size batch then save them in DB.
         for n in range(0, len(uidSearchResult)):
             uidBatch = ','.join(uidSearchResult[n])
-            result, data = mailBox.uid('fetch', uidBatch, self.config.IMAP['DataFormat'])
+            result, data = mailBox.uid('fetch', uidBatch, Grabber.DATA_FORMAT)
             if result != 'OK':
                 print('Issue while fetching: ' + result)
                 exit(1)
 
-            print(str(datetime.now()) + ' - Fetching: ' + str(len(uidSearchResult[n]) + n * BATCH_SIZE) + '/' + nbUids)
+            print(str(datetime.now()) + ' - Fetching: ' + str(len(uidSearchResult[n]) + n * Grabber.BATCH_SIZE) + '/' + nbUids)
 
             for i in range(0, len(data), 2):
                 mail = self.parseEmail(data[i])
@@ -51,7 +56,7 @@ class Grabber(object):
 
 
     def parseEmail(self, input):
-        raw_message = message.message_from_string(input[1])
+        raw_message = email.message_from_string(input[1])
 
         # This part should be refactored using RegEx to doesn't count on order.
         ids = input[0].replace('(', '').split()

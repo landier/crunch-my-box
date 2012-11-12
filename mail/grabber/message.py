@@ -1,4 +1,4 @@
-class Email(object):
+class Message(object):
     def __init__(self, uid = None, subject = None):
         self.Uid = uid
         self.Sender = None
