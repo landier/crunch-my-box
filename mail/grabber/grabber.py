@@ -4,7 +4,7 @@ from datetime import datetime
 from message import Message
 
 class Grabber(object):
-    BATCH_SIZE = 10
+    BATCH_SIZE = 50
     DATA_FORMAT = '(UID X-GM-MSGID X-GM-THRID RFC822)'
 
 
@@ -51,7 +51,8 @@ class Grabber(object):
             print(str(datetime.now()) + ' - Fetching: ' + str(len(uidSearchResult[n]) + n * Grabber.BATCH_SIZE) + '/' + nbUids)
 
             for i in range(0, len(data), 2):
-                mail = self.parseEmail(data[i])
+                #mail = self.parseEmail(data[i])
+                mail = Message(data[i])
                 self.dao.save(mail)
 
 
