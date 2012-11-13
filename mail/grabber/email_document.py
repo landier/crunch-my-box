@@ -21,7 +21,10 @@ class EmailDocument(SON):
         self['UID'] = ids[6]
 
         self['From'] = raw['headers']['From']
-        self['To'] = raw['headers']['To']
+        if 'To' in raw['headers']:
+            self['To'] = raw['headers']['To']
+        if 'CC' in raw['headers']:
+            self['CC'] = raw['headers']['CC']
 
         self['Date'] = raw['headers']['Date']
         self['Subject'] = raw['headers']['Subject']
