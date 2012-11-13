@@ -35,26 +35,29 @@ class Grabber(object):
             print('Issue while searching: ' + result)
             exit(1)
 
-        uids = data[0].split(' ')
-        nbUids = str(len(uids))
-        print(str(datetime.now()) + ' - Search: ' + search + ' - Results: ' + nbUids)
-        uidSearchResult = list(self.chunks(uids, Grabber.BATCH_SIZE))
+        uidEmailList = data[0].split(' ')
+        nbOfEmails = str(len(uidEmailList))
+        print(str(datetime.now()) + ' - Search: ' + search + ' - Results: ' + nbOfEmails)
+        uidFetchLists = self.splitListToNLists(uidEmailList, Grabber.BATCH_SIZE)
 
         # Fetch found emails by 10 size batch then save them in DB.
-        for n in range(0, len(uidSearchResult)):
-            uidBatch = ','.join(uidSearchResult[n])
+        for n in range(0, len(uidFetchLists)):
+            uidBatch = ','.join(uidFetchLists[n])
             result, data = mailBox.uid('fetch', uidBatch, Grabber.DATA_FORMAT)
             if result != 'OK':
                 print('Issue while fetching: ' + result)
                 exit(1)
 
-            print(str(datetime.now()) + ' - Fetching: ' + str(len(uidSearchResult[n]) + n * Grabber.BATCH_SIZE) + '/' + nbUids)
+            print(str(datetime.now()) + ' - Fetching: ' + str(len(uidFetchLists[n]) + n * Grabber.BATCH_SIZE) + '/' + nbOfEmails)
 
             for i in range(0, len(data), 2):
                 emailDoc = EmailDocument(data[i])
                 self.dao.save(emailDoc)
 
-    def chunks(self, l, n):
+    def splitListToNLists(self, list, rowSize):
         """ Yield successive n-sized chunks from given list. """
-        for i in xrange(0, len(l), n):
-            yield l[i:i+n]
+        resultList = []
+        for i in xrange(0, len(list), rowSize):
+            resultList.append(list[i:i+rowSize])
+
+        return resultList
