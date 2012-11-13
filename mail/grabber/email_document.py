@@ -11,10 +11,15 @@ class EmailDocument(SON):
 
         # This part should be refactored using RegEx to doesn't count on order.
         ids = input[0].replace('(', '').split()
-        self['_id'] = ids[4] # X-GM-MSGID to be the CouchDB _id
-        self[ids[1]] = ids[2] # X-GM-THRID
-        self[ids[3]] = ids[4] # X-GM-MSGID
-        self[ids[5]] = ids[6] # UID
+
+        # X-GM-MSGID to be the database _id
+        self['_id'] = ids[4]
+        # X-GM-THRID
+        self[ids[1]] = ids[2]
+        # X-GM-MSGID
+        self[ids[3]] = ids[4]
+        # UID
+        self[ids[5]] = ids[6]
 
         self['content'] = self.convertEmailToDictionary(message)
 

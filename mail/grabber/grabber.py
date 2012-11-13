@@ -1,5 +1,4 @@
 import imaplib
-import email
 from datetime import datetime
 from email_document import EmailDocument
 
@@ -31,6 +30,7 @@ class Grabber(object):
     def retrieveEmails(self, mailBox, search):
         # Search in mailbox for matching emails.
         result, data = mailBox.uid('search', None, search)
+
         if result != 'OK':
             print('Issue while searching: ' + result)
             exit(1)
@@ -38,12 +38,14 @@ class Grabber(object):
         uidEmailList = data[0].split(' ')
         nbOfEmails = str(len(uidEmailList))
         print(str(datetime.now()) + ' - Search: ' + search + ' - Results: ' + nbOfEmails)
+
         uidFetchLists = self.splitListToNLists(uidEmailList, Grabber.BATCH_SIZE)
 
-        # Fetch found emails by 10 size batch then save them in DB.
+        # Fetch found emails by N size batch then save them in DB.
         for n in range(0, len(uidFetchLists)):
-            uidBatch = ','.join(uidFetchLists[n])
-            result, data = mailBox.uid('fetch', uidBatch, Grabber.DATA_FORMAT)
+            uidBatchList = ','.join(uidFetchLists[n])
+            result, data = mailBox.uid('fetch', uidBatchList, Grabber.DATA_FORMAT)
+
             if result != 'OK':
                 print('Issue while fetching: ' + result)
                 exit(1)
@@ -54,9 +56,10 @@ class Grabber(object):
                 emailDoc = EmailDocument(data[i])
                 self.dao.save(emailDoc)
 
+
     def splitListToNLists(self, list, rowSize):
-        """ Yield successive n-sized chunks from given list. """
         resultList = []
+
         for i in xrange(0, len(list), rowSize):
             resultList.append(list[i:i+rowSize])
 
