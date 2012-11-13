@@ -3,10 +3,10 @@ from bson.son import SON
 
 class EmailDocument(SON):
     def __init__(self, raw_email):
-        self.parseEmail(raw_email)
+        self._parse_email(raw_email)
 
 
-    def parseEmail(self, input):
+    def _parse_email(self, input):
         message = email.message_from_string(input[1])
 
         # This part should be refactored using RegEx to doesn't count on order.
@@ -21,10 +21,10 @@ class EmailDocument(SON):
         # UID
         self[ids[5]] = ids[6]
 
-        self['content'] = self.convertEmailToDictionary(message)
+        self['content'] = self._convert_email_to_dictionary(message)
 
 
-    def convertEmailToDictionary(self, email):
+    def _convert_email_to_dictionary(self, email):
         dictEmail = email.__dict__
 
         # We can remove not wanted fields here.
@@ -42,6 +42,6 @@ class EmailDocument(SON):
         # Convert recursively payloads (messages) in this email.
         if isinstance(dictEmail['payload'], list):
             for i in range(0, len(dictEmail['payload'])):
-                dictEmail['payload'][i] = self.convertEmailToDictionary(dictEmail['payload'][i])
+                dictEmail['payload'][i] = self._convert_email_to_dictionary(dictEmail['payload'][i])
 
         return dictEmail

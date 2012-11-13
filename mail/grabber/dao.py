@@ -4,9 +4,9 @@ from json import dumps
 
 class DAO(object):
     def __init__(self, config):
-        self.connectToDabase(config.DB['Host'], config.DB['Port'], config.DB['Name'], config.DB['Collection'])
+        self._connect_to_database(config.DB['Host'], config.DB['Port'], config.DB['Name'], config.DB['Collection'])
 
-    def connectToDabase(self, host, port, name, collection):
+    def _connect_to_database(self, host, port, name, collection):
         connection = Connection(host, int(port))
         self.collection = connection[name][collection]
         print(str(datetime.now()) + '- Connected to database: ' + host + ':' + port + '/' + name + '/' + collection)
