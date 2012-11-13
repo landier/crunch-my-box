@@ -4,9 +4,9 @@ from couchdb.client import Server
 class CouchDBDao(object):
     def __init__(self, config):
         self.config = config
-        self.connect()
+        self._connect()
 
-    def connect(self):
+    def _connect(self):
         server = Server(self.config.DB['Host'])
         try:
             self.db = server.create(self.config.DB['Name'])
