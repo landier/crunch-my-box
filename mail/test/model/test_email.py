@@ -1,5 +1,5 @@
 import unittest
-from grabber.message import Email
+from grabber.email_document import Email
 
 class EmailTestCase(unittest.TestCase):
     def test_repr(self):
