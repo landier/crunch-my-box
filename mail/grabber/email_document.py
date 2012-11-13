@@ -1,13 +1,13 @@
 import email
 from bson.son import SON
 
-class Message(SON):
+class EmailDocument(SON):
     def __init__(self, raw_email):
         self.parseEmail(raw_email)
 
 
     def parseEmail(self, input):
-        self.email = email.message_from_string(input[1])
+        message = email.message_from_string(input[1])
 
         # This part should be refactored using RegEx to doesn't count on order.
         ids = input[0].replace('(', '').split()
@@ -16,7 +16,7 @@ class Message(SON):
         self[ids[3]] = ids[4] # X-GM-MSGID
         self[ids[5]] = ids[6] # UID
 
-        self['content'] = self.convertEmailToDictionary(self).items
+        self['content'] = self.convertEmailToDictionary(message)
 
 
     def convertEmailToDictionary(self, email):

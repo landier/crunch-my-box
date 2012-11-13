@@ -1,5 +1,5 @@
 import imaplib
-import message
+import email_document
 from datetime import datetime
 
 BATCH_SIZE = 10
@@ -51,7 +51,7 @@ class Grabber(object):
 
 
     def parseEmail(self, input):
-        raw_message = message.message_from_string(input[1])
+        raw_message = email_document.message_from_string(input[1])
 
         # This part should be refactored using RegEx to doesn't count on order.
         ids = input[0].replace('(', '').split()
