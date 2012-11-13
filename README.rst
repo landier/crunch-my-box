@@ -1,5 +1,10 @@
-Mail
+Crunch my box
 ==============
 
-Subsection Header
+Grabber
 -----------------
+Retrieves emails and save them into MongoDB.
+
+Cruncher
+-----------------
+Analyses emails stored into MongoDB.
