@@ -13,21 +13,21 @@ class Grabber(object):
 
 
     def run(self):
-        mailBox = self.connectToEmailAccount(self.config.IMAP['Host'],
+        mailBox = self._connect_to_email_account(self.config.IMAP['Host'],
                                                   self.config.IMAP['Username'],
                                                   self.config.IMAP['Password'],
                                                   self.config.IMAP['Folder'])
-        self.retrieveEmails(mailBox, self.config.IMAP['Search'])
+        self._retrieve_emails(mailBox, self.config.IMAP['Search'])
 
 
-    def connectToEmailAccount(self, host, username, password, folder):
+    def _connect_to_email_account(self, host, username, password, folder):
         mailBox = imaplib.IMAP4_SSL(host)
         mailBox.login(username, password)
         mailBox.select(folder)
         return mailBox
 
 
-    def retrieveEmails(self, mailBox, search):
+    def _retrieve_emails(self, mailBox, search):
         # Search in mailbox for matching emails.
         result, data = mailBox.uid('search', None, search)
 
@@ -39,7 +39,7 @@ class Grabber(object):
         nbOfEmails = str(len(uidEmailList))
         print(str(datetime.now()) + ' - Search: ' + search + ' - Results: ' + nbOfEmails)
 
-        uidFetchLists = self.splitListToNLists(uidEmailList, Grabber.BATCH_SIZE)
+        uidFetchLists = self._split_list_to_list_array(uidEmailList, Grabber.BATCH_SIZE)
 
         # Fetch found emails by N size batch then save them in DB.
         for n in range(0, len(uidFetchLists)):
@@ -57,7 +57,7 @@ class Grabber(object):
                 self.dao.save(emailDoc)
 
 
-    def splitListToNLists(self, list, rowSize):
+    def _split_list_to_list_array(self, list, rowSize):
         resultList = []
 
         for i in xrange(0, len(list), rowSize):
