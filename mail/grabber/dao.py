@@ -12,7 +12,7 @@ class DAO(object):
         print(str(datetime.now()) + '- Connected to database: ' + host + ':' + port + '/' + name + '/' + collection)
 
     def save(self, obj):
-        doc = self.collection.find_one({ '_id': obj['_id'] })
+        doc = self.collection.find_one({ 'X-GM-MSGID': obj['X-GM-MSGID'] })
 
         if doc is not None:
             return
