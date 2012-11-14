@@ -1,8 +1,6 @@
 from datetime import datetime
 import email
 from bson.son import SON
-from htmllib import HTMLParser
-from formatter import AbstractFormatter, DumbWriter
 
 class EmailDocument(SON):
     def __init__(self, raw_email):
