@@ -5,53 +5,50 @@ from bson.son import SON
 
 class EmailDocument(SON):
     def __init__(self, raw_email):
-
-        metadata, data = self._parse_email(raw_email)
-        self._fill_fields(metadata, data)
-
-
-    def _fill_fields(self, metadata, data):
         self['Created'] = datetime.now()
+        self._parse_email(raw_email)
 
-        self['X-GM-THRID'] = metadata[2]
-        self['X-GM-MSGID'] = metadata[4]
-        self['UID'] = metadata[6]
-
-        self['From'] = data['headers']['From']
-        if 'To' in data['headers']:
-            self['To'] = data['headers']['To']
-        if 'CC' in data['headers']:
-            self['CC'] = data['headers']['CC']
-
-        self['Date'] = data['headers']['Date']
-        self['Subject'] = data['headers']['Subject']
-
-        if 'Message-ID' in data['headers']:
-            self['Message-ID'] = data['headers']['Message-ID']
-        elif 'Message-Id' in data['headers']:
-            self['Message-ID'] = data['headers']['Message-Id']
-        if 'In-Reply-To' in data['headers']:
-            self['In-Reply-To'] = data['headers']['In-Reply-To']
-        if 'References' in data['headers']:
-            self['References'] = data['headers']['References']
-        if 'List-ID' in data['headers']:
-            self['List-ID'] = data['headers']['List-ID']
-
-        self['Message'] = data['payload']
-
-        self['Raw'] = data
 
     def _parse_email(self, input):
-        metadata = input[0].replace('(', '').split()
-
         message = email.message_from_string(input[1])
-        data = self._convert_email_to_dictionary(message)
 
-        return metadata, data
+        # This part should be refactored using RegEx to doesn't count on order.
+        ids = input[0].replace('(', '').split()
+        raw = self._convert_email_to_dictionary(message)
+
+        self['X-GM-THRID'] = ids[2]
+        self['X-GM-MSGID'] = ids[4]
+        self['UID'] = ids[6]
+
+        self['From'] = raw['headers']['From']
+        if 'To' in raw['headers']:
+            self['To'] = raw['headers']['To']
+        if 'CC' in raw['headers']:
+            self['CC'] = raw['headers']['CC']
+
+        self['Date'] = raw['headers']['Date']
+        self['Subject'] = raw['headers']['Subject']
+
+        if 'Message-ID' in raw['headers']:
+            self['Message-ID'] = raw['headers']['Message-ID']
+        elif 'Message-Id' in raw['headers']:
+            self['Message-ID'] = raw['headers']['Message-Id']
+        if 'In-Reply-To' in raw['headers']:
+            self['In-Reply-To'] = raw['headers']['In-Reply-To']
+        if 'References' in raw['headers']:
+            self['References'] = raw['headers']['References']
+        if 'List-ID' in raw['headers']:
+            self['List-ID'] = raw['headers']['List-ID']
+
+        self['RAW'] = raw
+        # DEBUG
+        del self['RAW']['payload']
 
 
     def _convert_email_to_dictionary(self, email):
         dictEmail = email.__dict__
+
+        # We can remove not wanted fields here.
 
         dictEmail['headers'] = {}
         for key, value in dictEmail['_headers']:
@@ -60,17 +57,12 @@ class EmailDocument(SON):
 
         dictEmail['payload'] = dictEmail['_payload']
         del dictEmail['_payload']
-
         dictEmail['charset'] = dictEmail['_charset']
         del dictEmail['_charset']
-
         dictEmail['default_type'] = dictEmail['_default_type']
         del dictEmail['_default_type']
-
+        dictEmail['unixfrom'] = dictEmail['_unixfrom']
         del dictEmail['_unixfrom']
-        del dictEmail['defects']
-        del dictEmail['epilogue']
-        del dictEmail['preamble']
 
         # Convert recursively payloads (messages) in this email.
         if isinstance(dictEmail['payload'], list):
