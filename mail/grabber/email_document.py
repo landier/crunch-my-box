@@ -1,11 +1,9 @@
 from datetime import datetime
 import email
-from itertools import izip
 from bson.son import SON
 
 class EmailDocument(SON):
     def __init__(self, raw_email):
-
         metadata, data = self._parse_email(raw_email)
         self._fill_fields(metadata, data)
 
@@ -40,6 +38,7 @@ class EmailDocument(SON):
         self['Message'] = data['payload']
 
         self['Raw'] = data
+
 
     def _parse_email(self, input):
         metadata = input[0].replace('(', '').split()
