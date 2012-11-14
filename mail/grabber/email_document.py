@@ -1,6 +1,8 @@
 from datetime import datetime
 import email
 from bson.son import SON
+from htmllib import HTMLParser
+from formatter import AbstractFormatter, DumbWriter
 
 class EmailDocument(SON):
     def __init__(self, raw_email):
@@ -21,7 +23,7 @@ class EmailDocument(SON):
         if 'CC' in data['headers']:
             self['CC'] = data['headers']['CC']
 
-        self['Date'] = data['headers']['Date']
+        self['Date'] = email.utils.parsedate_tz(data['headers']['Date'])
         self['Subject'] = data['headers']['Subject']
 
         if 'Message-ID' in data['headers']:
