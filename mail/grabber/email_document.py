@@ -1,55 +1,40 @@
-from email import utils
 from bson.son import SON
 import email
+from email import utils
 from datetime import datetime
 
 
 class EmailDocument(SON):
     def __init__(self, raw_email):
-        metadata, data = self._parse_email(raw_email)
-        self._fill_fields(metadata, data)
+        metadata = raw_email[0].replace('(', '').split()
 
-
-    def _fill_fields(self, metadata, data):
-        self['Created'] = datetime.now()
+        # X-GM-MSGID as _id
+        self['_created'] = datetime.now()
 
         self['X-GM-THRID'] = metadata[2]
         self['X-GM-MSGID'] = metadata[4]
         self['UID'] = metadata[6]
 
-        self['From'] = utils.parseaddr(data['headers']['From'])
-        if 'To' in data['headers']:
-            self['To'] = data['headers']['To']
-        if 'Cc' in data['headers']:
-            self['Cc'] = data['headers']['Cc']
+        msg = email.message_from_string(raw_email[1])
 
-        self['Date'] = self._convert_string_to_date(data['headers']['Date'])
-        self['Subject'] = self._convert_email_string_to_utf8(data['headers']['Subject'])
+        if msg.has_key('Message-ID'):
+            self['Message-ID'] = msg.get('Message-ID')
+        elif msg.has_key('Message-Id'):
+            self['Message-Id'] = msg.get('Message-Id')
+        self['In-Reply-To'] = msg.get_all('In-Reply-To')
+        self['References'] = msg.get_all('References')
+        self['List-ID'] = msg.get('List-ID')
 
-        if 'Message-ID' in data['headers']:
-            self['Message-ID'] = data['headers']['Message-ID']
-        elif 'Message-Id' in data['headers']:
-            self['Message-ID'] = data['headers']['Message-Id']
-        if 'In-Reply-To' in data['headers']:
-            self['In-Reply-To'] = data['headers']['In-Reply-To']
-        if 'References' in data['headers']:
-            self['References'] = data['headers']['References']
-        if 'List-ID' in data['headers']:
-            self['List-ID'] = data['headers']['List-ID']
+        self['From'] = utils.parseaddr(msg.get('From'))
+        self['To'] = map(utils.parseaddr, msg.get_all('To'))
+        if msg.has_key('Cc'):
+            self['Cc'] = map(utils.parseaddr, msg.get_all('Cc'))
 
-        # Only the text/plain message
-        self['Body'] = data['payload'][0]
+        self['Date'] = self._convert_string_to_date(msg.get('Date'))
+        self['Subject'] = self.decode_text(msg.get('Subject'), msg)
+        self['Body'] = self.get_body_from_email(msg)
 
-        self['Raw'] = data
-
-
-    def _parse_email(self, input):
-        metadata = input[0].replace('(', '').split()
-
-        message = email.message_from_string(input[1])
-        data = self._convert_email_to_dictionary(message)
-
-        return metadata, data
+        self['Raw'] = raw_email[1]
 
 
     def _convert_email_string_to_utf8(self, input):
@@ -62,31 +47,61 @@ class EmailDocument(SON):
         return datetime.fromtimestamp(utils.mktime_tz(utils.parsedate_tz(input)))
 
 
-    def _convert_email_to_dictionary(self, email):
-        dictEmail = email.__dict__
+    def get_charsets(self, msg):
+        charsets = set({})
+        for c in msg.get_charsets():
+            if c is not None:
+                charsets.update([c])
+        return charsets
 
-        dictEmail['headers'] = {}
-        for key, value in dictEmail['_headers']:
-            dictEmail['headers'][key] = value
-        del dictEmail['_headers']
 
-        dictEmail['payload'] = dictEmail['_payload']
-        del dictEmail['_payload']
+    def handle_error(self, errmsg, emailmsg, cs):
+        print()
+        print(errmsg)
+        print("This error occurred while decoding with ",cs," charset.")
+        print("These charsets were found in the one email.",self.get_charsets(emailmsg))
+        print("This is the subject:",emailmsg['subject'])
+        print("This is the sender:",emailmsg['From'])
 
-        dictEmail['charset'] = dictEmail['_charset']
-        del dictEmail['_charset']
 
-        dictEmail['default_type'] = dictEmail['_default_type']
-        del dictEmail['_default_type']
+    def get_body_from_email(self, msg):
+        body = None
+        #Walk through the parts of the email to find the text body.
+        if msg.is_multipart():
+            for part in msg.walk():
 
-        del dictEmail['_unixfrom']
-        del dictEmail['defects']
-        del dictEmail['epilogue']
-        del dictEmail['preamble']
+                # If part is multipart, walk through the subparts.
+                if part.is_multipart():
 
-        # Convert recursively payloads (messages) in this email.
-        if isinstance(dictEmail['payload'], list):
-            for i in range(0, len(dictEmail['payload'])):
-                dictEmail['payload'][i] = self._convert_email_to_dictionary(dictEmail['payload'][i])
+                    for subpart in part.walk():
+                        if subpart.get_content_type() == 'text/plain':
+                            # Get the subpart payload (i.e the message body)
+                            body = subpart.get_payload(decode=True)
+                            #charset = subpart.get_charset()
 
-        return dictEmail
+                # Part isn't multipart so get the email body
+                elif part.get_content_type() == 'text/plain':
+                    body = part.get_payload(decode=True)
+                    #charset = part.get_charset()
+
+        # If this isn't a multi-part message then get the payload (i.e the message body)
+        elif msg.get_content_type() == 'text/plain':
+            body = msg.get_payload(decode=True)
+
+        body = self.decode_text(body, msg)
+        return body
+
+
+    def decode_text(self, text, message):
+        # No checking done to match the charset with the correct part.
+        for charset in self.get_charsets(message):
+            try:
+                text = text.decode(charset)
+            except UnicodeEncodeError:
+                self.handle_error("UnicodeEncodeError: encountered.", message, charset)
+            except UnicodeDecodeError:
+                self.handle_error("UnicodeDecodeError: encountered.", message, charset)
+            except AttributeError:
+                self.handle_error("AttributeError: encountered", message, charset)
+
+        return text

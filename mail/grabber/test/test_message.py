@@ -1,3 +1,5 @@
+import base64
+
 def _convert_email_text_to_utf8(input):
     return input.decode("quopri")\
     .decode("ISO-8859-1")\
