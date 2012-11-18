@@ -2,7 +2,6 @@ from email import utils
 from bson.son import SON
 import email
 from datetime import datetime
-import time
 
 
 class EmailDocument(SON):
@@ -39,7 +38,7 @@ class EmailDocument(SON):
             self['List-ID'] = data['headers']['List-ID']
 
         # Only the text/plain message
-        self['Message'] = data['payload'][0]
+        self['Body'] = data['payload'][0]
 
         self['Raw'] = data
 
