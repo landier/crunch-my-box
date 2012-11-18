@@ -31,23 +31,18 @@ class EmailDocument(SON):
             self['Cc'] = map(utils.parseaddr, msg.get_all('Cc'))
 
         self['Date'] = self._convert_string_to_date(msg.get('Date'))
-        self['Subject'] = self.decode_text(msg.get('Subject'), msg)
-        self['Body'] = self.get_body_from_email(msg)
+        self['Subject'] = self._decode_text(msg.get('Subject'), msg)
+        self['Body'] = self._get_body_from_email(msg)
 
-        self['Raw'] = raw_email[1]
-
-
-    def _convert_email_string_to_utf8(self, input):
-        return utils.unquote(input)\
-                    .decode("ISO-8859-1")\
-                    .encode("utf8")
+        # For debug purpose
+        #self['Raw'] = raw_email[1]
 
 
     def _convert_string_to_date(self, input):
         return datetime.fromtimestamp(utils.mktime_tz(utils.parsedate_tz(input)))
 
 
-    def get_charsets(self, msg):
+    def _get_charsets(self, msg):
         charsets = set({})
         for c in msg.get_charsets():
             if c is not None:
@@ -55,16 +50,16 @@ class EmailDocument(SON):
         return charsets
 
 
-    def handle_error(self, errmsg, emailmsg, cs):
-        print()
+    def _handle_error(self, errmsg, emailmsg, cs):
         print(errmsg)
-        print("This error occurred while decoding with ",cs," charset.")
-        print("These charsets were found in the one email.",self.get_charsets(emailmsg))
-        print("This is the subject:",emailmsg['subject'])
-        print("This is the sender:",emailmsg['From'])
+        print("This error occurred while decoding with ", cs, " charset.")
+        print("These charsets were found in the one email.", self._get_charsets(emailmsg))
+        print("This is the subject:", emailmsg['subject'])
+        print("This is the sender:", emailmsg['From'])
+        print('\r\n')
 
 
-    def get_body_from_email(self, msg):
+    def _get_body_from_email(self, msg):
         body = None
         #Walk through the parts of the email to find the text body.
         if msg.is_multipart():
@@ -88,20 +83,20 @@ class EmailDocument(SON):
         elif msg.get_content_type() == 'text/plain':
             body = msg.get_payload(decode=True)
 
-        body = self.decode_text(body, msg)
+        body = self._decode_text(body, msg)
         return body
 
 
-    def decode_text(self, text, message):
+    def _decode_text(self, text, message):
         # No checking done to match the charset with the correct part.
-        for charset in self.get_charsets(message):
+        for charset in self._get_charsets(message):
             try:
                 text = text.decode(charset)
             except UnicodeEncodeError:
-                self.handle_error("UnicodeEncodeError: encountered.", message, charset)
+                self._handle_error("UnicodeEncodeError: encountered.", message, charset)
             except UnicodeDecodeError:
-                self.handle_error("UnicodeDecodeError: encountered.", message, charset)
+                self._handle_error("UnicodeDecodeError: encountered.", message, charset)
             except AttributeError:
-                self.handle_error("AttributeError: encountered", message, charset)
+                self._handle_error("AttributeError: encountered", message, charset)
 
         return text
