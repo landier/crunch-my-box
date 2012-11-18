@@ -1,6 +1,7 @@
 from bson.son import SON
 import email
 from email import utils
+from email.header import decode_header
 from datetime import datetime
 
 
@@ -11,9 +12,9 @@ class EmailDocument(SON):
         # X-GM-MSGID as _id
         self['_created'] = datetime.now()
 
-        self['X-GM-THRID'] = metadata[2]
-        self['X-GM-MSGID'] = metadata[4]
-        self['UID'] = metadata[6]
+        self['X-GM-THRID'] = int(metadata[2])
+        self['X-GM-MSGID'] = int(metadata[4])
+        self['UID'] = int(metadata[6])
 
         msg = email.message_from_string(raw_email[1])
 
@@ -21,12 +22,19 @@ class EmailDocument(SON):
             self['Message-ID'] = msg.get('Message-ID')
         elif msg.has_key('Message-Id'):
             self['Message-Id'] = msg.get('Message-Id')
-        self['In-Reply-To'] = msg.get_all('In-Reply-To')
-        self['References'] = msg.get_all('References')
-        self['List-ID'] = msg.get('List-ID')
+        if msg.has_key('In-Reply-To'):
+            self['In-Reply-To'] = msg.get_all('In-Reply-To')
+        if msg.has_key('References'):
+            self['References'] = msg.get_all('References')
+        if msg.has_key('List-ID'):
+            self['List-ID'] = msg.get('List-ID')
 
-        self['From'] = utils.parseaddr(msg.get('From'))
-        self['To'] = map(utils.parseaddr, msg.get_all('To'))
+        headerFrom = decode_header(msg.get('From'))
+        headerFromName = headerFrom[0][0].decode(headerFrom[0][1])
+        self['From'] = tuple([headerFromName, headerFrom[1][0]])
+
+        if msg.has_key('To'):
+            self['To'] = map(utils.parseaddr, msg.get_all('To'))
         if msg.has_key('Cc'):
             self['Cc'] = map(utils.parseaddr, msg.get_all('Cc'))
 
