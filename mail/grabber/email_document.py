@@ -1,6 +1,9 @@
-from datetime import datetime
-import email
+from email import utils
 from bson.son import SON
+import email
+from datetime import datetime
+import time
+
 
 class EmailDocument(SON):
     def __init__(self, raw_email):
@@ -15,14 +18,14 @@ class EmailDocument(SON):
         self['X-GM-MSGID'] = metadata[4]
         self['UID'] = metadata[6]
 
-        self['From'] = data['headers']['From']
+        self['From'] = utils.parseaddr(data['headers']['From'])
         if 'To' in data['headers']:
             self['To'] = data['headers']['To']
-        if 'CC' in data['headers']:
-            self['CC'] = data['headers']['CC']
+        if 'Cc' in data['headers']:
+            self['Cc'] = data['headers']['Cc']
 
-        self['Date'] = email.utils.parsedate_tz(data['headers']['Date'])
-        self['Subject'] = data['headers']['Subject']
+        self['Date'] = self._convert_string_to_date(data['headers']['Date'])
+        self['Subject'] = self._convert_email_string_to_utf8(data['headers']['Subject'])
 
         if 'Message-ID' in data['headers']:
             self['Message-ID'] = data['headers']['Message-ID']
@@ -35,7 +38,8 @@ class EmailDocument(SON):
         if 'List-ID' in data['headers']:
             self['List-ID'] = data['headers']['List-ID']
 
-        self['Message'] = data['payload']
+        # Only the text/plain message
+        self['Message'] = data['payload'][0]
 
         self['Raw'] = data
 
@@ -47,6 +51,16 @@ class EmailDocument(SON):
         data = self._convert_email_to_dictionary(message)
 
         return metadata, data
+
+
+    def _convert_email_string_to_utf8(self, input):
+        return utils.unquote(input)\
+                    .decode("ISO-8859-1")\
+                    .encode("utf8")
+
+
+    def _convert_string_to_date(self, input):
+        return datetime.fromtimestamp(utils.mktime_tz(utils.parsedate_tz(input)))
 
 
     def _convert_email_to_dictionary(self, email):

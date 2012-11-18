@@ -2,6 +2,7 @@ import imaplib
 from datetime import datetime
 from email_document import EmailDocument
 
+
 class Grabber(object):
     BATCH_SIZE = 50
     DATA_FORMAT = '(UID X-GM-MSGID X-GM-THRID RFC822)'
@@ -14,9 +15,9 @@ class Grabber(object):
 
     def run(self):
         mailBox = self._connect_to_email_account(self.config.IMAP['Host'],
-                                                  self.config.IMAP['Username'],
-                                                  self.config.IMAP['Password'],
-                                                  self.config.IMAP['Folder'])
+                                                 self.config.IMAP['Username'],
+                                                 self.config.IMAP['Password'],
+                                                 self.config.IMAP['Folder'])
         self._retrieve_emails(mailBox, self.config.IMAP['Search'])
 
 
