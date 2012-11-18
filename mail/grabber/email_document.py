@@ -29,9 +29,10 @@ class EmailDocument(SON):
         if msg.has_key('List-ID'):
             self['List-ID'] = msg.get('List-ID')
 
-        headerFrom = decode_header(msg.get('From'))
-        headerFromName = headerFrom[0][0].decode(headerFrom[0][1])
-        self['From'] = tuple([headerFromName, headerFrom[1][0]])
+        #headerFrom = decode_header(msg.get('From'))
+        #headerFromName = headerFrom[0][0].decode(headerFrom[0][1])
+        #self['From'] = tuple([headerFromName, headerFrom[1][0]])
+        self['From'] = msg.get('From')
 
         if msg.has_key('To'):
             self['To'] = map(utils.parseaddr, msg.get_all('To'))
