@@ -1,7 +1,6 @@
 from bson.son import SON
 import email
 from email import utils
-from email.header import decode_header
 from datetime import datetime
 
 
@@ -29,15 +28,12 @@ class EmailDocument(SON):
         if msg.has_key('List-ID'):
             self['List-ID'] = msg.get('List-ID')
 
-        #headerFrom = decode_header(msg.get('From'))
-        #headerFromName = headerFrom[0][0].decode(headerFrom[0][1])
-        #self['From'] = tuple([headerFromName, headerFrom[1][0]])
-        self['From'] = msg.get('From')
+        self['From'] = utils.parseaddr(msg.get('From'))[1]
 
         if msg.has_key('To'):
-            self['To'] = map(utils.parseaddr, msg.get_all('To'))
+            self['To'] = map(lambda x: utils.parseaddr(x)[1], msg.get_all('To'))
         if msg.has_key('Cc'):
-            self['Cc'] = map(utils.parseaddr, msg.get_all('Cc'))
+            self['Cc'] = map(lambda x: utils.parseaddr(x)[1], msg.get_all('Cc'))
 
         self['Date'] = self._convert_string_to_date(msg.get('Date'))
         self['Subject'] = self._decode_text(msg.get('Subject'), msg)
