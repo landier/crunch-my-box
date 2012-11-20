@@ -17,10 +17,7 @@ class EmailDocument(SON):
 
         msg = email.message_from_string(raw_email[1])
 
-        if msg.has_key('Message-ID'):
-            self['Message-ID'] = msg.get('Message-ID')
-        elif msg.has_key('Message-Id'):
-            self['Message-Id'] = msg.get('Message-Id')
+        self['Message-ID'] = msg.get('Message-ID')
         if msg.has_key('In-Reply-To'):
             self['In-Reply-To'] = msg.get_all('In-Reply-To')
         if msg.has_key('References'):
