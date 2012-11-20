@@ -24,7 +24,7 @@ class EmailDocument(SON):
         if msg.has_key('In-Reply-To'):
             self['In-Reply-To'] = msg.get_all('In-Reply-To')
         if msg.has_key('References'):
-            self['References'] = msg.get_all('References')
+            self['References'] = msg.get('References').split('\r\n ')
         if msg.has_key('List-ID'):
             self['List-ID'] = msg.get('List-ID')
 
