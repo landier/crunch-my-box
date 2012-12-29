@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name = 'Mail',
+    name = 'mail',
     version = '0.1.0',
     author = 'Nicolas Landier',
     author_email = '',
