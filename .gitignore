@@ -1,6 +1,8 @@
 settings.ini
 db
 
+*.class
+
 *.py[co]
 
 # Packages
