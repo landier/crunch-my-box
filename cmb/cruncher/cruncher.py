@@ -9,8 +9,8 @@ tagger = UnigramTagger(brown.tagged_sents(categories='news')[:500])
 t = brown.tagged_sents(categories='news')
 
 # Training & Test set
-trainingSet = pickle.load(open('../resources/trainSentences.pickle', 'rb'))
-testSet = pickle.load(open('../resources/testSentences.pickle', 'rb'))
+trainingSet = pickle.load(open('../../resources/trainSentences.pickle', 'rb'))
+testSet = pickle.load(open('../../resources/testSentences.pickle', 'rb'))
 
 # Functions
 def evaluate(nameTagger, tagger):
