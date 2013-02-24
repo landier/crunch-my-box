@@ -1,5 +1,6 @@
 settings.ini
 resources
+*.pickle
 
 *.class
 

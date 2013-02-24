@@ -11,5 +11,5 @@ setup(
     license =  open('LICENSE.txt').read(),
     description = 'Grabs emails and store them into a mongoDB database.',
     long_description = open('README.rst').read(),
-    install_requires = ['couchdb', 'pymongo'],
+    install_requires = ['couchdb', 'pymongo', 'nltk'],
 )

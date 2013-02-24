@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import os, pickle
 import xml.etree.ElementTree as etree
 
@@ -14,26 +17,27 @@ def _parseFile(file, taggedCorpus):
                 if word.text is None:
                     continue
                 elif len(word) > 0:
-                    taggedSentence.append((word.attrib['lemma'], word.attrib['cat']))
+                    taggedSentence.append((word.attrib['lemma'].lower(), word.attrib['cat']))
                 elif word.text is not None:
-                    taggedSentence.append((word.text, word.attrib['cat']))
+                    taggedSentence.append((word.text.lower(), word.attrib['cat']))
             except:
                 print(file + " - " + etree.tostring(word))
                 pass
 
-        taggedCorpus.append(taggedSentence)
+        if len(taggedSentence) > 0:
+            taggedCorpus.append(taggedSentence)
 
 
-def createTaggedCorpus(corpusName, inputDirectory):
+def createTaggedCorpus(corpusName, inputDirectory, outputDirectory):
     files = os.listdir(inputDirectory)
 
     taggedCorpus = []
     for file in files:
         _parseFile(inputDirectory + '/' + file, taggedCorpus)
 
-    pickle.dump(taggedCorpus, open(corpusName + 'Sentences.pickle', 'wb'))
+    pickle.dump(taggedCorpus, open(outputDirectory + '/' + corpusName + 'Sentences.pickle', 'wb'))
 
 
 if __name__ == "__main__":
-    createTaggedCorpus('train', '../../resources/FrenchTreebank/corpus-tagged-train')
-    createTaggedCorpus('test', '../../resources/FrenchTreebank/corpus-tagged-test')
+    createTaggedCorpus('train', '../../resources/FrenchTreebank/corpus-tagged-train', '../../resources/corpus')
+    createTaggedCorpus('test', '../../resources/FrenchTreebank/corpus-tagged-test', '../../resources/corpus')
