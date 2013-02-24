@@ -2,7 +2,7 @@ import codecs, os, pickle
 import xml.etree.ElementTree as etree
 
 def createTaggedCorpus(name):
-    inputDirectory = 'FrenchTreebank/corpus-tagged-' + name
+    inputDirectory = '../resources/FrenchTreebank/corpus-tagged-' + name
     #outputFile = codecs.open(name + 'Sentences.txt', 'a', 'utf-8')
 
     files = os.listdir(inputDirectory)

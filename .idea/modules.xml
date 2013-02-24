@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/cruncher.iml" filepath="$PROJECT_DIR$/cruncher.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crunch-my-box.iml" filepath="$PROJECT_DIR$/crunch-my-box.iml" />
     </modules>
   </component>
 </project>
